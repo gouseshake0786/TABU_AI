@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>TABU AI</title>
+
+  <!-- ✅ Mobile Responsive -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Markdown parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Highlight.js -->
+  <link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+  <style>
+    body {
+      background: #000;
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 20px;
+      color: wheat;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: auto;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      font-size: 16px;
+      resize: none;
+      background: #111;
+      color: white;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 12px 20px;
+      border: none;
+      background: #4CAF50;
+      color: white;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 16px;
+      width: 100%;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #45a049;
+    }
+
+    .response-box {
+      margin-top: 25px;
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+      line-height: 1.6;
+      color: black;
+      display: none;
+      overflow-x: auto;
+    }
+
+    .response-box table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+      font-size: 14px;
+    }
+
+    .response-box th,
+    .response-box td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      word-break: break-word;
+    }
+
+    .response-box th {
+      background: #f1f1f1;
+    }
+
+    .response-box pre {
+      border-radius: 10px;
+      padding: 15px;
+      overflow-x: auto;
+    }
+
+    /* Mobile Optimization */
+    @media (max-width: 600px) {
+      body {
+        padding: 15px;
+      }
+
+      h2 {
+        font-size: 20px;
+      }
+
+      textarea {
+        font-size: 15px;
+      }
+
+      button {
+        font-size: 15px;
+        padding: 10px;
+      }
+
+      .response-box {
+        padding: 15px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>🤖 TABU AI Learning Assistant</h2>
+
+  <textarea id="userInput" rows="4"
+    placeholder="Ask me anything to get response from TABU AI"></textarea>
+
+  <button onclick="sendMessage()">Ask TABU</button>
+
+  <div id="response" class="response-box"></div>
+</div>
+
+<script>
+
+  // Optional: Disable right click
+  document.addEventListener("contextmenu", (e) => e.preventDefault());
+
+  // Optional: Disable common shortcuts
+  document.addEventListener("keydown", (e) => {
+    if (
+      e.key === "F12" ||
+      (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) ||
+      (e.ctrlKey && e.key === "U") ||
+      (e.ctrlKey && e.key === "S")
+    ) {
+      e.preventDefault();
+    }
+  });
+
+  // Enter key to send (Shift+Enter for new line)
+  document.getElementById("userInput")
+    .addEventListener("keypress", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+  async function sendMessage() {
+
+    const userMessage = document.getElementById("userInput").value;
+    const responseDiv = document.getElementById("response");
+
+    if (!userMessage.trim()) {
+      alert("Please enter a question!");
+      return;
+    }
+
+    responseDiv.style.display = "block";
+    responseDiv.innerHTML = "⏳ Thinking...";
+
+    try {
+      const res = await fetch("https://ai.megallm.io/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer sk-mega-5e1aee67dc0d6ae065129ff90ba7bed2a8f0ab61a5fb6eeac43c6ce3d9e47b44"
+        },
+        body: JSON.stringify({
+          model: "openai-gpt-oss-20b",
+          messages: [
+            { role: "user", content: userMessage }
+          ]
+        })
+      });
+
+      const data = await res.json();
+
+      const aiResponse = data.choices[0].message.content
+        .replaceAll("ChatGPT", "TABU AI")
+        .replaceAll("OpenAI", "Mahamad Gouse");
+
+      const htmlContent = marked.parse(aiResponse);
+      responseDiv.innerHTML = htmlContent;
+
+      // Highlight code blocks
+      document.querySelectorAll('pre code').forEach((el) => {
+        hljs.highlightElement(el);
+      });
+
+    } catch (error) {
+      responseDiv.innerHTML = "❌ Error occurred. Check console.";
+      console.error(error);
+    }
+  }
+
+</script>
+
+</body>
+</html>
